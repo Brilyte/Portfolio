@@ -1,7 +1,6 @@
 import pygame
 from pygame.locals import *
 from sudoku import SudokuGrid
-from pygame_textinput import TextInput
 
 SCREENRECT = Rect(0, 0, 640, 480)
 COLOR_INACTIVE = pygame.Color(223, 97, 97)
