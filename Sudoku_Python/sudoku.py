@@ -1,7 +1,7 @@
+import os
+import copy
 
 class SudokuGrid():
-
-    # TODO create Cell class
 
     def __init__(self, size=9, empty=0):
         # Fill an empty grid with empty (0)
@@ -11,13 +11,14 @@ class SudokuGrid():
         self.empty = empty
         self.size = size
         self.count = 0
+        self.solution_file = ''
 
     # Helper functions --------------------
     def pretty_print(self):
         for ent in range(self.size):
             print(self.grid[ent])
-
-    def print_grid(self):
+    
+    def write_grid(self):
         grid = ''
         for i in range(self.size):
             # If at box bottom print divider
@@ -32,7 +33,10 @@ class SudokuGrid():
                     grid += ("|")
                 grid += str(self.grid[i][j])
             grid += "\n"
-        print(grid)
+        return grid
+
+    def print_grid(self):
+        print(self.write_grid())
 
     # Cell functions ----------------------
     def get_cell(self, row, col):
@@ -152,7 +156,9 @@ class SudokuGrid():
             for ent in input_str:
                 yield ent
 
-        with open(puzzle, 'r' ,encoding='utf-8') as f:
+        puzzle_filename = os.path.splitext(puzzle)[0]
+
+        with open(puzzle, 'r', encoding='utf-8') as f:
             self.reset_grid()
             puzzle_str = f.read()
             if len(puzzle_str) not in [132, 133]:
@@ -173,6 +179,8 @@ class SudokuGrid():
                     else:
                         val = int(entry)
                     self.fill_cell(row+1, col+1, val)
+
+            self.solution_file = puzzle_filename +  '_solution.txt'
 
     def is_valid(self):
         # Check if grid is valid based on what's been filled in so far
@@ -237,7 +245,7 @@ class SudokuGrid():
         # If cell is empty we need to solve for it
         else:
             self.count += 1
-            print(self.count)
+            # print(self.count)
 
             for value in range(1, self.size + 1):
                 if self.cell_is_valid(row, col, value):
@@ -257,21 +265,22 @@ class SudokuGrid():
 def main():
     sudoku_grid = SudokuGrid(9, 0)
 
-    print(sudoku_grid.enter_puzzle('puzzle.txt'))
-    sudoku_grid.print_grid()
-    # print('here', sudoku_grid.cell_is_valid(1, 1, 1))
+    puzzle_file = 'easy_puzzle.txt'
+    sudoku_grid.enter_puzzle(puzzle_file)
+    
     solved = sudoku_grid.solve(1, 1) # start at first corner
+    
     if solved:
         assert(sudoku_grid.is_valid())
         print(f'Solution is valid: {sudoku_grid.is_valid()}')
         print(f'Solved in {sudoku_grid.count} iterations!')
-    else:
-        print('Puzzle in not solvable')
-    
-    print(sudoku_grid.print_grid())
-    # sudoku_grid.pretty_print()
+        
+        with open(sudoku_grid.solution_file , 'w') as f:
+            f.write(sudoku_grid.write_grid())
 
-    # print(sudoku_grid.is_valid())
+    else:
+        print('Puzzle in not solvable!')
+
 
 if __name__=="__main__":
     # call the main function
