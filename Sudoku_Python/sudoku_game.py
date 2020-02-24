@@ -85,6 +85,7 @@ sudoku_grid.enter_puzzle('easy_puzzle.txt')
 
 solution_grid = SudokuGrid(9, 0)
 solution_grid.enter_puzzle(sudoku_grid.solution_file)
+solution_grid.print_grid()
 
 
 def fill_cell(sudoku_grid, cells, x, y, row, col, cell_size):
@@ -119,7 +120,7 @@ def better_fill(sudoku_grid, grid_size, starting_corner):
     return cells, grid_cells
 
 grid_size = 400
-grid_coor = (100, 25)
+grid_coor = (100, 100)
 cells, grid_cells = better_fill(sudoku_grid, grid_size, grid_coor)
 
 
@@ -128,10 +129,19 @@ def get_text_center(button, surface, font_type):
         text_y = (button.height - font_type.get_linesize()) / 2
         return (text_x, text_y)
 
+def check_solution():
+    for row in range(sudoku_grid.size):
+        for col in range(sudoku_grid.size):
+            if sudoku_grid.get_cell(row, col) != solution_grid.get_cell(row, col):
+                return row + 1, col + 1
+            else:
+                continue
+    return None
+
 def main():
     pygame.init()
 
-    screen = pygame.display.set_mode((640, 480), 0, 32)
+    screen = pygame.display.set_mode((640, 640), 0, 32)
 
     button_width = 100
     button_height = 50
@@ -140,11 +150,16 @@ def main():
     buttonR = Rect(button_x, button_y, button_width, button_height)
     solve_surface = cell_font.render('SOLVE', True, COLOR_INACTIVE)
 
-    buttonY = Rect(button_x + 100, button_y, button_width, button_height)
+    buttonY = Rect(button_x + 110, button_y, button_width, button_height)
     yes_surface = cell_font.render('YES', True, COLOR_INACTIVE)
+
+    button_x = ((grid_size / 2) - (225 / 2)) + grid_coor[0]
+    buttonBad = Rect(button_x, 25, 225, button_height)
+    bad_surface = cell_font.render('CONGRATULATIONS!', True, COLOR_INACTIVE)
 
     r_text_x, r_text_y = get_text_center(buttonR, solve_surface, cell_font)
     y_text_x, y_text_y = get_text_center(buttonY, yes_surface, cell_font)
+    b_text_x, b_text_y = get_text_center(buttonBad, bad_surface, cell_font)
     
     temp_buttons = []
 
@@ -169,8 +184,19 @@ def main():
                     temp_buttons.append(buttonY)
 
                 if buttonY.collidepoint(event.pos):
-                    print("YES!")
-                    # solve the grid
+                    solution = check_solution()
+                    if solution:
+                        bad_surface = cell_font.render(
+                            'Bad row: {}, col: {}'.format(
+                                solution[0], solution[1]), 
+                            True, 
+                            COLOR_INACTIVE
+                        )
+                        temp_buttons.append(buttonBad)
+                    else:
+                        bad_surface = cell_font.render(
+                            'CONGRATULATIONS!', True, COLOR_INACTIVE)
+                        temp_buttons.append(buttonBad)
 
                 elif not buttonR.collidepoint(event.pos):
                     temp_buttons = []
@@ -178,8 +204,12 @@ def main():
 
         for button in temp_buttons:
             pygame.draw.rect(screen, COLOR_LOCKED, button, 2)
-            screen.blit(yes_surface, (button.x + y_text_x, button.y + y_text_y))
-                    
+            if button.x == buttonY.x:
+                screen.blit(yes_surface, (button.x + y_text_x, button.y + y_text_y))
+            elif button.x == buttonBad.x:
+                b_text_x, b_text_y = get_text_center(buttonBad, bad_surface, cell_font)
+                screen.blit(bad_surface, (button.x + b_text_x, button.y + b_text_y))
+
         for cell in grid_cells:
             pygame.draw.rect(screen, COLOR_LOCKED, cell, 5)
 
