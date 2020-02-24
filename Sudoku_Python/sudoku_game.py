@@ -123,18 +123,36 @@ grid_coor = (100, 25)
 cells, grid_cells = better_fill(sudoku_grid, grid_size, grid_coor)
 
 
+def get_text_center(button, surface, font_type):
+        text_x = (button.width - surface.get_width()) / 2
+        text_y = (button.height - font_type.get_linesize()) / 2
+        return (text_x, text_y)
+
 def main():
     pygame.init()
 
     screen = pygame.display.set_mode((640, 480), 0, 32)
-    pygame.draw.rect(screen, COLOR_LOCKED, main_grid, 2)
 
-    white = (255,255,255)
+    button_width = 100
+    button_height = 50
+    button_y = grid_size + grid_coor[1]
+    button_x = ((grid_size / 2) - (button_width / 2)) + grid_coor[0]
+    buttonR = Rect(button_x, button_y, button_width, button_height)
+    solve_surface = cell_font.render('SOLVE', True, COLOR_INACTIVE)
+
+    buttonY = Rect(button_x + 100, button_y, button_width, button_height)
+    yes_surface = cell_font.render('YES', True, COLOR_INACTIVE)
+
+    r_text_x, r_text_y = get_text_center(buttonR, solve_surface, cell_font)
+    y_text_x, y_text_y = get_text_center(buttonY, yes_surface, cell_font)
+    
+    temp_buttons = []
+
     running = True
 
     while running:
-        screen.fill(white)
-        pygame.draw.rect(screen, COLOR_LOCKED, main_grid, 5)
+        screen.fill((255, 255, 255))
+        # pygame.draw.rect(screen, COLOR_LOCKED, main_grid, 5)
         # event handling, gets all event from the event queue
         events = pygame.event.get()
         for event in events:
@@ -144,11 +162,33 @@ def main():
             for cell in cells:
                 cell.handle_event(event)
 
+            active = False
+            if event.type == MOUSEBUTTONDOWN:
+                # If the user clicked on the rect.
+                if buttonR.collidepoint(event.pos):
+                    temp_buttons.append(buttonY)
+
+                if buttonY.collidepoint(event.pos):
+                    print("YES!")
+                    # solve the grid
+
+                elif not buttonR.collidepoint(event.pos):
+                    temp_buttons = []
+                    active = False
+
+        for button in temp_buttons:
+            pygame.draw.rect(screen, COLOR_LOCKED, button, 2)
+            screen.blit(yes_surface, (button.x + y_text_x, button.y + y_text_y))
+                    
         for cell in grid_cells:
             pygame.draw.rect(screen, COLOR_LOCKED, cell, 5)
 
         for cell in cells:
             cell.draw(screen)
+
+        pygame.draw.rect(screen, COLOR_INACTIVE, buttonR, 2)
+
+        screen.blit(solve_surface, (buttonR.x + r_text_x, buttonR.y + r_text_y))
 
         pygame.display.update()
 
