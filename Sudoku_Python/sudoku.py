@@ -1,5 +1,7 @@
 import os
 import copy
+import datetime
+from time import sleep
 
 class SudokuGrid():
 
@@ -8,9 +10,16 @@ class SudokuGrid():
         self.grid = [[empty for x in range(size)] for y in range(size)]
 
         # Save this for future reference to what we consider 'empty' cells
+        # What represents an empty cell
         self.empty = empty
+
+        # x by x of entire puzzle (default 9x9)
         self.size = size
+
+        # How many iterations it takes to solve
         self.count = 0
+
+        # Name of solution file, filled in when puzzle loaded
         self.solution_file = ''
 
     # Helper functions --------------------
@@ -58,19 +67,15 @@ class SudokuGrid():
         return row-1, col-1
 
     def cell_is_empty(self, row, col):
-        # Let's make this check non-CS row and col :P
         return self.grid[row-1][col-1] == self.empty
 
     def cell_is_valid(self, row, col, val):
-        # Check if its valid to put value in row and col
-        # I hate subtracting one all the time, convert in validate
         SudokuGrid.validate_cell(row, col, val)
 
         # Check Row
         for ent in range(self.size):
             # Check every value in row except ourselves
             if not(ent == col-1) and val == self.grid[row-1][ent]:
-                # print('bad row selection', col, row, val)
                 return False
             
         # Check Column
@@ -79,7 +84,6 @@ class SudokuGrid():
             # If we're NOT on chosen row (True) and value IS in that column (True)
             # this entry is NOT valid 
             if not(ent == row-1) and val == self.grid[ent][col-1]:
-                # print('bad col selection')
                 return False
 
         # Get coordinates of top corner of 3 x 3 box
@@ -126,7 +130,6 @@ class SudokuGrid():
             for j in range(corner_col, corner_col + boxsize):
                 # If we're NOT in selected cell, and cell HAS value: FAIL
                 if (i != row-1 or j != col-1) and (val == self.grid[i][j]):
-                    # print('bad box selection', i, j)
                     return False
         return True
         
@@ -147,7 +150,7 @@ class SudokuGrid():
             new_puzzle = ''
             for ent in input_str:
                 if ent in ['-', '+', '|', '\n']:
-                    pass
+                    continue
                 else:
                     new_puzzle += ent
             return new_puzzle
@@ -267,21 +270,39 @@ def main():
 
     puzzle_file = 'easy_puzzle.txt'
     sudoku_grid.enter_puzzle(puzzle_file)
-    
-    solved = sudoku_grid.solve(1, 1) # start at first corner
-    
-    if solved:
-        assert(sudoku_grid.is_valid())
-        print(f'Solution is valid: {sudoku_grid.is_valid()}')
-        print(f'Solved in {sudoku_grid.count} iterations!')
-        
-        with open(sudoku_grid.solution_file , 'w') as f:
-            f.write(sudoku_grid.write_grid())
+    start = datetime.datetime.now()
 
-    else:
-        print('Puzzle in not solvable!')
+    try:
+        print(f'Loading {puzzle_file}...')
+        solved = sudoku_grid.solve(1, 1) # start at first corner
+    
+        if solved:
+            print(f'Solution is valid: {sudoku_grid.is_valid()}')
+            print(f'Solved in {sudoku_grid.count} iterations!')
+            time_elapsed = datetime.datetime.now() - start
+            print(f'Solved in {time_elapsed}')
+            
+            # Write solution file to puzzle_file + _solution.txt
+            with open(sudoku_grid.solution_file , 'w') as f:
+                f.write(sudoku_grid.write_grid())
+
+            print(f'Solution written to {sudoku_grid.solution_file}')
+
+        else:
+            print('Puzzle in not solvable!')
+            print(sudoku_grid.count)
+            time_elapsed = datetime.datetime.now() - start
+            print("Time passed: {}".format(time_elapsed))
+
+    except (Exception, KeyboardInterrupt) as e:
+        print('EXCEPTION OCCURRED!')
+        time_elapsed = datetime.datetime.now() - start
+        print(time_elapsed)
+        sudoku_grid.print_grid()
+        print(f'{sudoku_grid.count} iterations. Tried for {time_elapsed}.')
+        print("===========================")
+        print(e)
 
 
 if __name__=="__main__":
-    # call the main function
     main()
